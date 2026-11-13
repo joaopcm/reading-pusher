@@ -10,7 +10,7 @@ export type RunDeps = {
   prepareCover: (path: string) => Promise<PreparedCover | null>;
   write: (
     snapshot: ReadingSnapshot | null,
-    coverBase64: string | null,
+    cover: PreparedCover | null,
   ) => Promise<'written' | 'unchanged' | 'cleared'>;
   state: { lastProgressLog: string | null };
 };
@@ -30,7 +30,7 @@ function describeProgress(
   return `[run] progress for ${books.length} book(s): ${books.join(', ') || 'none'}`;
 }
 
-export async function runOnce(deps: RunDeps): Promise<void> {
+export async function runOnce(deps: RunDeps): Promise<boolean> {
   try {
     const books = deps.readLibrary();
     const byFingerprint = await deps.fingerprints(books);
@@ -45,16 +45,18 @@ export async function runOnce(deps: RunDeps): Promise<void> {
     const current = pickCurrent(byFingerprint, progress);
     if (!current) {
       await deps.write(null, null);
-      return;
+      return true;
     }
     const cover = await deps.prepareCover(`${current.book.dir}/cover.jpg`);
     const result = await deps.write(
       buildSnapshot(current.book, current.progress, cover),
-      cover?.base64 ?? null,
+      cover,
     );
     if (result !== 'unchanged')
       console.info(`[run] ${result}: ${current.book.title}`);
+    return true;
   } catch (error) {
     console.error('[run] failed, keeping the last snapshot:', error);
+    return false;
   }
 }

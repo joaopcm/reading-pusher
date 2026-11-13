@@ -45,19 +45,19 @@ describe('buildSnapshot', () => {
 });
 
 describe('SnapshotWriter', () => {
-  const snapshot = buildSnapshot(book, progress, {
-    base64: 'x',
-    version: 'v',
-    spineColor: '#000000',
-  });
+  const cover = { base64: 'x', version: 'v', spineColor: '#000000' };
+  const snapshot = buildSnapshot(book, progress, cover);
 
   it('writes once, then unchanged', async () => {
     const redis = fakeRedis();
     const writer = new SnapshotWriter(redis);
-    expect(await writer.write(snapshot, 'x')).toBe('written');
+    expect(await writer.write(snapshot, cover)).toBe('written');
     expect(redis.set).toHaveBeenCalledWith('reading:current', snapshot);
-    expect(redis.set).toHaveBeenCalledWith('reading:cover', 'x');
-    expect(await writer.write(snapshot, 'x')).toBe('unchanged');
+    expect(redis.set).toHaveBeenCalledWith('reading:cover', {
+      version: 'v',
+      base64: 'x',
+    });
+    expect(await writer.write(snapshot, cover)).toBe('unchanged');
     expect(redis.set).toHaveBeenCalledTimes(2);
   });
 
@@ -83,7 +83,7 @@ describe('SnapshotWriter', () => {
       throw new Error('upstash down');
     });
     const writer = new SnapshotWriter(redis);
-    expect(writer.write(snapshot, 'x')).rejects.toThrow('upstash down');
-    expect(await writer.write(snapshot, 'x')).toBe('written');
+    expect(writer.write(snapshot, cover)).rejects.toThrow('upstash down');
+    expect(await writer.write(snapshot, cover)).toBe('written');
   });
 });

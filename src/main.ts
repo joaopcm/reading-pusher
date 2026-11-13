@@ -24,7 +24,7 @@ const writer = new SnapshotWriter(
 const state = { lastProgressLog: null };
 
 async function tick() {
-  await runOnce({
+  const ok = await runOnce({
     readLibrary: () => readLibrary(config.libraryDir),
     fingerprints: (books) => cache.fingerprints(books),
     fetchProgress: (fingerprints) =>
@@ -37,7 +37,7 @@ async function tick() {
     write: (snapshot, cover) => writer.write(snapshot, cover),
     state,
   });
-  await Bun.write(HEARTBEAT_PATH, new Date().toISOString());
+  if (ok) await Bun.write(HEARTBEAT_PATH, new Date().toISOString());
 }
 
 console.info(

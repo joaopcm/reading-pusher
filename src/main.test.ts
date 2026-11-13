@@ -38,8 +38,12 @@ describe('runOnce', () => {
         percentage: 0.5,
         coverVersion: 'v',
       }),
-      'x',
+      expect.objectContaining({ version: 'v', base64: 'x' }),
     );
+  });
+
+  it('reports success so the heartbeat only beats on good runs', async () => {
+    expect(await runOnce(deps())).toBe(true);
   });
 
   it('keeps snapshot when kosync fails', async () => {
@@ -49,7 +53,7 @@ describe('runOnce', () => {
         throw new Error('kosync answered 401 for aaa');
       },
     });
-    await runOnce(d);
+    expect(await runOnce(d)).toBe(false);
     expect(d.write).not.toHaveBeenCalled();
     expect(String(error.mock.calls[0])).toContain('401');
     error.mockRestore();

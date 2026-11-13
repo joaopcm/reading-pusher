@@ -42,10 +42,10 @@ export class SnapshotWriter {
 
   async write(
     snapshot: ReadingSnapshot | null,
-    coverBase64: string | null,
+    cover: Pick<PreparedCover, 'version' | 'base64'> | null,
   ): Promise<'written' | 'unchanged' | 'cleared'> {
     const digest = createHash('sha1')
-      .update(JSON.stringify([snapshot, coverBase64]))
+      .update(JSON.stringify([snapshot, cover?.version ?? null]))
       .digest('hex');
     if (digest === this.lastWritten) return 'unchanged';
     if (!snapshot) {
@@ -53,8 +53,11 @@ export class SnapshotWriter {
       this.lastWritten = digest;
       return 'cleared';
     }
-    if (coverBase64) {
-      await this.redis.set(COVER_KEY, coverBase64);
+    if (cover) {
+      await this.redis.set(COVER_KEY, {
+        version: cover.version,
+        base64: cover.base64,
+      });
     } else {
       await this.redis.del(COVER_KEY);
     }
