@@ -1,0 +1,19 @@
+{
+  "name": "reading-pusher",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun src/main.ts",
+    "test": "bun test",
+    "lint": "biome check .",
+    "format": "biome format --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.7",
+    "@types/bun": "^1.4.4"
+  },
+  "dependencies": {
+    "@upstash/redis": "1.38.4",
+    "sharp": "0.35.4"
+  }
+}
